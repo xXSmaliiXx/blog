@@ -1,6 +1,5 @@
 package softuniBlog.entity;
 
-import org.springframework.context.annotation.EnableLoadTimeWeaving;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.*;

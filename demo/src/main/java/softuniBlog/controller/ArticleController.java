@@ -1,6 +1,5 @@
 package softuniBlog.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,17 +26,20 @@ import java.util.stream.Collectors;
 @Controller
 public class ArticleController {
 
-    @Autowired
-    private ArticleRepository articleRepository;
+    private final ArticleRepository articleRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private CategoryRepository categoryRepository;
+    private final CategoryRepository categoryRepository;
 
-    @Autowired
-    private TagRepository tagRepository;
+    private final TagRepository tagRepository;
+
+    public ArticleController(ArticleRepository articleRepository, UserRepository userRepository, CategoryRepository categoryRepository, TagRepository tagRepository) {
+        this.articleRepository = articleRepository;
+        this.userRepository = userRepository;
+        this.categoryRepository = categoryRepository;
+        this.tagRepository = tagRepository;
+    }
 
     @GetMapping("/article/create")
     @PreAuthorize("isAuthenticated()")
@@ -112,12 +114,13 @@ public class ArticleController {
 
         Article article = this.articleRepository.findById(id).orElse(null);
 
-        if(!isUserAuthorOrAdmin(article)) {
+        if(isUserAuthorOrAdmin(article)) {
             return "redirect:/article/" + id;
         }
 
         List<Category> categories = this.categoryRepository.findAll();
 
+        assert article != null;
         String tagString = article.getTags().stream()
                 .map(Tag::getName)
                 .collect(Collectors.joining(", "));
@@ -140,7 +143,7 @@ public class ArticleController {
 
         Article article = this.articleRepository.findById(id).orElse(null);
 
-        if(!isUserAuthorOrAdmin(article)) {
+        if(isUserAuthorOrAdmin(article)) {
             return "redirect:/article/" + id;
         }
 
@@ -149,6 +152,7 @@ public class ArticleController {
 
         HashSet<Tag> tags = this.findTagsFromString(articleBindingModel.getTagString());
 
+        assert article != null;
         article.setContent(articleBindingModel.getContent());
         article.setTitle(articleBindingModel.getTitle());
         article.setCategory(category);
@@ -169,7 +173,7 @@ public class ArticleController {
 
         Article article = this.articleRepository.findById(id).orElse(null);
 
-        if(!isUserAuthorOrAdmin(article)) {
+        if(isUserAuthorOrAdmin(article)) {
             return "redirect:/article/" + id;
         }
 
@@ -188,10 +192,11 @@ public class ArticleController {
 
         Article article = this.articleRepository.findById(id).orElse(null);
 
-        if(!isUserAuthorOrAdmin(article)) {
+        if(isUserAuthorOrAdmin(article)) {
             return "redirect:/article/" + id;
         }
 
+        assert article != null;
         this.articleRepository.delete(article);
 
         return "redirect:/";
@@ -202,7 +207,7 @@ public class ArticleController {
 
         User userEntity = this.userRepository.findByEmail(user.getUsername());
 
-        return userEntity.isAdmin() || userEntity.isAuthor(article);
+        return !userEntity.isAdmin() && !userEntity.isAuthor(article);
     }
 
     private HashSet<Tag> findTagsFromString(String tagString){
