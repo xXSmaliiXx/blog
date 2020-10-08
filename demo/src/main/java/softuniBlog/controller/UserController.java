@@ -9,10 +9,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import softuniBlog.bindingModel.UserBindingModel;
 import softuniBlog.entity.Role;
 import softuniBlog.entity.User;
@@ -21,6 +20,7 @@ import softuniBlog.repository.UserRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 @Controller
 public class UserController {
@@ -39,11 +39,13 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public String registerProcess(UserBindingModel userBindingModel){
+    public String registerProcess(UserBindingModel userBindingModel, @RequestParam("image") MultipartFile multipartFile) throws IOException {
+
 
         if(!userBindingModel.getPassword().equals(userBindingModel.getConfirmPassword())){
-            return "redirect:/register";
+            return "/register";
         }
+        String fileName = StringUtils.cleanPath(multipartFile.getOriginalFilename());
 
         BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
 
@@ -52,14 +54,21 @@ public class UserController {
                 userBindingModel.getFullName(),
                 bCryptPasswordEncoder.encode(userBindingModel.getPassword())
         );
+        user.setPhotos(fileName);
+        User savedUser = userRepository.save(user);
 
+        String uploadDir = "user-photos/" + savedUser.getId();
+
+        FileUploadUtil.saveFile(uploadDir, fileName, multipartFile);
         Role userRole = this.roleRepository.findByName("ROLE_USER");
 
         user.addRole(userRole);
 
         this.userRepository.saveAndFlush(user);
 
+
         return "redirect:/login";
+
     }
 
     @GetMapping("/login")

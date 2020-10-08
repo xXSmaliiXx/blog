@@ -17,6 +17,11 @@ public class User {
 
     private String password;
 
+    @Transient public String getPhotosImagePath() {
+        if (avatar == null || id == null) return null;
+
+        return "/user-photos/" + id + "/" + avatar;
+    }
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "users_roles")
     public Set<Role> getRoles() {
@@ -73,8 +78,20 @@ public class User {
         return password;
     }
 
+
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    @Column(nullable = true, length = 64)
+    private String avatar;
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
     }
 
     @OneToMany(mappedBy = "author")
@@ -104,5 +121,6 @@ public class User {
         return Objects.equals(this.getId(), article.getAuthor().getId());
     }
 
-
+    public void setPhotos(String fileName) {
+    }
 }

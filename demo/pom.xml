@@ -80,6 +80,13 @@
         </dependency>
     </dependencies>
 
+
+    <bean id="multipartResolver"
+          class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <!-- Maximum size of configuration file upload 10M -->
+        <property name="maxUploadSize" value="10240000"></property>
+    </bean>
+
     <build>
         <plugins>
             <plugin>
